@@ -184,6 +184,7 @@ for i=1:ncols
 Lo(i) = (g/(2.*pi))*Tpb(i).^2;
 eb(i) = slopeb(i)./( sqrt( hsb(i)/Lo(i) ) );
 eo(i) = slopeb(i)./( sqrt( Hob(i)/Lo(i) ) );
+% surf-scaling paramter (Guza and Inman, 1975)
 ep(i) = 0.5*hsb(i).*(2.*pi/Tpb(i)).^2/(g*slopeb(i).^2);
 end
 %% Bathy figure
@@ -386,7 +387,7 @@ pos(4)=ph
 set(gca, 'Position', pos)
 print('hs_runup.png','-dpng','-r300')
 %% beach slope calcs and plot
-dhx = diff(h)
+dhx = diff(h);
 dhy = diff(h')';
 dhxm = [NaN*ones(1,288);dhx];
 dhym = [NaN*ones(126,1) dhy];
@@ -400,10 +401,57 @@ slopemap = sqrt(dhxm.^2 + dhym.^2 );
 nanmaskh=ones(size(h));
 nanmaskh( -h >=3 )=NaN;
 figure(8); clf
+subplot(211)
 pcolor(xg,yg,slopemap.*nanmaskh)
+hold on
 shading flat
-colorbar
+xlim([0,1400])
+ylim([50,500])
+%colormap(cmocean('haline'))
+colormap('parula')
 caxis([0 .6])
+ylabel('Cross-shore distance [m]','fontsize',14)
+[c,hndle] = contour(xgg,ygg,minush,[-8:2:6],'linecolor',[.8 .8 1],'linewidth',2);
+clabel(c,hndle,'Fontsize',12,'color',[.8 .8 1])
+%axis equal
+for i=1:ncols
+   plot(xg(i),yg(idiss(i)),'.','color',[.7 .7 .7],'markersize',12)
+   %plot(xg(i),yg(idry(i)) ,'.','color',[.7 .7 .7],'markersize',12)
+   if (ibr(i)>0)
+      plot(xg(i),yg(ibr(i)),'.','color',[.8 .2 .2],'markersize',12)
+   end
+end
+title('Bottom slope tan{\alpha} [ ]','fontweight','normal','fontsize',14);
+set(gca,'xticklabels',[])
+colorbar('northoutside')
+
+subplot(413)
+plot(xg,slopeb,'linewidth',2)
+ylabel('Slope at breakpoint tan(\alpha)_b')
+xlim([0,1400])
+set(gca,'xticklabels',[])
+grid on
+pos = get(gca, 'Position');
+pos(4) = pos(4)*1.3;
+set(gca, 'Position', pos)
+set(gca, 'fontsize', 12)
+
+subplot(414)
+plot(xg,2.5*ones(size(xg)),'--k')
+hold on
+plot(xg,20*ones(size(xg)),'--k')
+plot(xg,ep,'linewidth',2)
+ylabel('Surf-scaling parameter \epsilon')
+xlim([0,1400])
+set(gca,'yscale','log')
+pos = get(gca, 'Position');
+pos(4) = pos(4)*1.3;
+text(10, 30, 'Dissipative','fontsize',12)
+text(10, 1, 'Reflective','Fontsize',12)
+set(gca, 'Position', pos)
+set(gca, 'fontsize', 12)
+xlabel('Alongshore distance [m]','fontsize',14)
+print('slope_map_surf_scaling.png','-dpng','-r300')
 %% slope stats
 slopemapNaN = slopemap.*nanmaskh;
 hmapNaN = h.*nanmaskh;
