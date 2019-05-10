@@ -15,6 +15,25 @@ xf = fliplr(x)+110;
 
 % first good profile:
 irg = 82;
+
+%%
+titles = ['22-Jan-2016';...
+   '25-Jan-2016';...
+   '11-Feb-2016';...
+   '30-Mar-2016';...
+   '21-Sep-2016';...
+   '09-Jan-2017';...
+   '25-Jan-2017';...
+   '14-Feb-2017';...
+   '16-Mar-2017';...
+   '28-Apr-2017';...
+   '04-May-2017';...
+   '18-Sep-2017';...
+   %         '03-Jan-2017',...
+   '10-Jan-2018';...
+   '09-Mar-2018'];
+titles = cellstr(titles)
+dn_map = datenum(titles)
 %% find MHW for average map (not including 2018 maps)
 zm = mean(z(:,:,1:12),3);
 mhwm = nan*ones(nx,1);
@@ -41,6 +60,64 @@ fprintf(1,'Replaced %d points.\n',length(ireplace))
 % linear interpolation across groin by beachcam house
 mhwm(1005:1017) = linspace(126.5,127.3,13)
 imhwm = round(mhwm);
+%% find MHW (1.28 m NAVD88) and  MWL (0. m NAVD88) on each map
+mhw = nan*ones(nx,nmap);
+mwl = nan*ones(nx,nmap);
+slope2=nan*ones(nx,nmap);
+serr=nan*ones(nx,nmap);
+for is=1:nmap
+   zs = conv2(squeeze(z(:,:,is)),ones(3)./9,'same');
+   for ir=irg:nx
+      %zt = z(:,ir,is);
+      zt = zs(:,ir);
+      zok = flipud(zt(~isnan(zt)));
+      yok = flipud(y(~isnan(zt))');
+      iy = find(zok>1.28,1,'first');
+      % MHW
+      if(~isempty(iy))
+         if(iy>1)
+            y0 = interp1(zok(iy-1:iy),yok(iy-1:iy),1.28);
+            %y0 = interp1(zok,yok,1.)
+         else
+            y0 = yok(1);
+         end
+         mhw(ir,is)=y0;
+      end
+      % MWL
+      iy = find(zok>0,1,'first');
+      if(~isempty(iy))
+         if(iy>1)
+            y0 = interp1(zok(iy-1:iy),yok(iy-1:iy),0);
+            %y0 = interp1(zok,yok,1.)
+         else
+            y0 = yok(1);
+         end
+         mwl(ir,is)=y0;
+      end
+      slope2(ir,is)=1.28/abs(mhw(ir,is)-mwl(ir,is));
+      serr(ir,is)=0.08/slope2(ir,is);
+   end
+end
+%% fit linear trend to shoreline MWL and MHW position
+mwl_rate = nan*ones*nx;
+mwl_rate_se = nan*ones*nx;
+mwl_rate_r2 = nan*ones*nx;
+mhw_rate = nan*ones*nx;
+mhw_rate_se = nan*ones*nx;
+mhw_rate_r2 = nan*ones*nx;
+X = dn_map/365.25;
+for ir = irg:nx   
+   Y = mwl(ir,:)';
+   [a,b,r2,sa,sb,hdot]=lsfit(X,Y,0);
+   mwl_rate(ir)=b;
+   mwl_rate_se(ir)=sb;
+   mwl_rate_r2(ir)=r2;
+   Y = mhw(ir,:)';
+   [a,b,r2,sa,sb,hdot]=lsfit(X,Y,0);
+   mhw_rate(ir)=b;
+   mhw_rate_se(ir)=sb;
+   mhw_rate_r2(ir)=r2;
+end
 %% set the distance to the back of the profile
 % these are meant to capture the changing bits
 xoff = 80*ones(nx,1);
@@ -59,19 +136,97 @@ plot(xf,mhwm-xoff,'.k')
 title('Mean elevation')
 %% find volume between mhwm and back of profile
 vols = nan*ones(nx,nmap);
+err  = nan*ones(nx,nmap);
 for is=1:nmap
-for ir=irg:nx
-   istrt= imhwm(ir)-xoff(ir)
-   iend = imhwm(ir)
-   if(~isnan(istrt+iend))
-   vols(ir,is)=sum(z(imhwm(ir)-xoff(ir):imhwm(ir),ir,is));
+   for ir=irg:nx
+      istrt= imhwm(ir)-xoff(ir);
+      iend = imhwm(ir);
+      if(~isnan(istrt+iend))
+         vols(ir,is)=sum(z(imhwm(ir)-xoff(ir):imhwm(ir),ir,is));
+         err(ir,is) = sqrt(2*0.08^2)*(iend-istrt);
+      end
    end
 end
-end
-%%
-plot(xf,dvols(:,7),'linewidth',3)
+dvols = diff(vols,1,2);
+%% plot of volume change and inferred transport rate
+figure(10); clf
+subplot(211)
+h1=plot(xf,medfilt(dvols(:,7),7),'linewidth',3);
 hold on
-plot(xf,medfilt(dvols(:,7),7),'linewidth',3)
+h2=plot(xf,medfilt(dvols(:,7),7)+err(:,7),'--');
+set(h2,'color',[.4 .4 .7])
+h3=plot(xf,medfilt(dvols(:,7),7)-err(:,7),'--');
+set(h3,'color',[.4 .4 .7]);
+xlim([0,1400])
+grid on
+text(.02,.95,'a','Fontsize',14,'Units','normalized')
+ylabel('Volume Change [m^3/m]')
+
+subplot(212)
+dv = flipud((dvols(:,7)));
+dv(isnan(dv))=0;
+h4=plot(xf,flipud(-cumsum(dv))/(3600*3),'linewidth',2);
+xlim([0,1400])
+grid on
+text(.02,.95,'b','Fontsize',14,'Units','normalized')
+ylabel('Inferred Alongshore Flux [m^3/s]')
+% save these for plotting in 'capecodbay_anal.m'
+save('volumes.mat', 'vols', 'dvols', 'dv')
+
+%% shoreline location differences
+dmwl = diff(mwl,1,2);
+dmhw = diff(mhw,1,2);
+% edit some wild points
+dmwl(115:124,7)=NaN;
+dmwl(455:466,7)=NaN;
+dmwl(469,7)=NaN;
+dmwl(1261:1273,7)=NaN;
+
+dmhw(118,7)=NaN;
+dmhw(120,7)=NaN;
+dmhw(122:123,7)=NaN;
+dmhw(1276:1278,7)=NaN;
+dmhw(1284,7)=NaN;
+%% plot shoreline change and volume change
+figure(11);clf
+subplot(211)
+% the median horizontal error of shoreline locations,based on the slope and vertical precision of 8 cm
+% is +/-1.9 m...try to make this band about 4-m wide
+h1=plot(xf,dmwl(:,7),'linewidth',12,'color',[.9 .8 .8]);
+hold on
+h1=plot(xf,dmwl(:,7),'linewidth',2,'color',[.9 .2 .2]);
+hold on
+plot(xf,dmwl(:,7)+sqrt(2*serr(:,7)),'--r')
+plot(xf,dmwl(:,7)-sqrt(2*serr(:,7)),'--r')
+
+h2=plot(xf,dmhw(:,7),'linewidth',14,'color',[.8 .8 .9]);
+h2=plot(xf,dmhw(:,7),'linewidth',2,'color',[.2 .2 .9]);
+plot(xf,dmhw(:,7)+sqrt(2*serr(:,7)),'--b')
+plot(xf,dmhw(:,7)-sqrt(2*serr(:,7)),'--b')
+legend([h1;h2],'MWL','MHW','location','southwest')
+grid on
+ylabel('Shoreline Change [m]','fontsize',14)
+text(.02,.95,'a','Fontsize',14,'Units','normalized')
+ylim([-40, 10])
+xlim([0 1400])
+set(gca, 'fontsize', 12)
+set(gca,'xticklabels',[])
+
+
+subplot(212)
+h1=plot(xf,medfilt(dvols(:,7),7),'linewidth',3);
+hold on
+h2=plot(xf,medfilt(dvols(:,7),7)+err(:,7),'--');
+set(h2,'color',[.4 .4 .7])
+h3=plot(xf,medfilt(dvols(:,7),7)-err(:,7),'--');
+set(h3,'color',[.4 .4 .7]);
+xlim([0,1400])
+grid on
+text(.02,.95,'b','Fontsize',14,'Units','normalized')
+ylabel('Volume Change [m^3/m]','fontsize',14)
+set(gca, 'fontsize', 12)
+xlabel('Alongshore distance [m]','fontsize',14)
+
 
 %% find profile points
 
@@ -136,23 +291,7 @@ for is=1:nmap
    end
 end
 %plot(yr(3:end),ddzy)
-%%
-titles = ['22-Jan-2016';...
-   '25-Jan-2016';...
-   '11-Feb-2016';...
-   '30-Mar-2016';...
-   '21-Sep-2016';...
-   '09-Jan-2017';...
-   '25-Jan-2017';...
-   '14-Feb-2017';...
-   '16-Mar-2017';...
-   '28-Apr-2017';...
-   '04-May-2017';...
-   '18-Sep-2017';...
-   %         '03-Jan-2017',...
-   '10-Jan-2018';...
-   '09-Mar-2018'];
-titles = cellstr(titles)
+
 
 %%
 is = 7;
