@@ -2,7 +2,9 @@
 clear
 %fnam = 'one_meter_test.nc'
 %fnam = 'D:\crs\src\Raster_calcs\20cm_test2.nc'
-fnam = 'D:\crs\src\Raster_calcs\one_meter_test2.nc'
+%fnam = 'D:\crs\src\Raster_calcs\one_meter_test2.nc'
+fnam = 'one_meter_test2.nc'
+
 
 x=ncread(fnam,'Alongshore')';
 y=ncread(fnam,'Cross-shore')';
@@ -106,7 +108,7 @@ mhw_rate = nan*ones*nx;
 mhw_rate_se = nan*ones*nx;
 mhw_rate_r2 = nan*ones*nx;
 X = dn_map/365.25;
-for ir = irg:nx   
+for ir = irg:nx
    Y = mwl(ir,:)';
    [a,b,r2,sa,sb,hdot]=lsfit(X,Y,0);
    mwl_rate(ir)=b;
@@ -281,12 +283,13 @@ for is=1:nmap
          peaks(ir,:,is)=pks;
          peaklocs(ir,:,is)=y0-locs;
          [infl,ilocs]=findpeaks(ddzy,yddzy,'minpeakheight',.05,'npeaks',2,'minpeakwidth',2);
-      end
-      if(~isempty(infl))
-         infz = interp1(yr,zok,ilocs);
-         plot(ilocs,infl,'*b');
-         inflecs(ir,:,is)=infz;
-         infleclocs(ir,:,is)=y0-infl;
+         
+         if(~isempty(infl))
+            infz = interp1(yr,zok,ilocs);
+            plot(ilocs,infl,'*b');
+            inflecs(ir,:,is)=infz;
+            infleclocs(ir,:,is)=y0-infl;
+         end
       end
    end
 end
