@@ -1,6 +1,6 @@
 % capecodbay_anal - Analyze stationary SWAN runs for Sandwich
 
-clear
+%clear
 fnam='../swan_stationary/grids/CCBay_FG2.nc';
 %% 2017 runs - peak of Feb storm
 datt = '20170213_000000'
@@ -189,7 +189,7 @@ ep(i) = 0.5*hsb(i).*(2.*pi/Tpb(i)).^2/(g*slopeb(i).^2);
 end
 %% Bathy figure
 minush = -h;
-figure(1); clf
+figure(11); clf
 subplot(211)
 pcolorjw(xg,yg,minush)
 hold on
@@ -220,7 +220,14 @@ text(125,320,'North')
 % end
 
 %% Wave power plot
-figure(2);clf
+gray = [.8 .8 .8];
+dkgray = [.7 .7 .7];
+rust = [.8 .2 .2];
+pink = [.9 .7 .7];
+blue = [.4 .4 .8];
+ylims = [-50 20];
+
+figure(12);clf
 subplot(211)
 pcolorjw(xg,yg,P./1000)
 hold on
@@ -230,10 +237,8 @@ ylim([50,500])
 %colormap(cmocean('haline'))
 colormap('parula')
 caxis([0 40])
-ylabel('Cross-shore distance [m]','fontsize',14)
 [c,hndle] = contour(xgg,ygg,minush,[-8:2:6],'linecolor',[.8 .8 1],'linewidth',2);
 clabel(c,hndle,'Fontsize',12,'color',[.8 .8 1])
-
 %axis equal
 for i=1:ncols
    plot(xg(i),yg(idiss(i)),'.','color',[.7 .7 .7],'markersize',12)
@@ -242,9 +247,10 @@ for i=1:ncols
       plot(xg(i),yg(ibr(i)),'.','color',[.8 .2 .2],'markersize',12)
    end
 end
-
 h1=quiver(xgg(1:8:end,1:8:end),ygg(1:8:end,1:8:end),u(1:8:end,1:8:end),v(1:8:end,1:8:end));
 set(h1,'color',[.3 .3 .4],'linewidth',1)
+text(.02,.95,'a','Fontsize',14,'Units','normalized')
+ylabel('Cross-shore distance [m]','fontsize',14)
 title('Wave Power {\itP} [kW m^{-1}]','fontweight','normal','fontsize',14);
 set(gca,'xticklabels',[])
 colorbar('northoutside')
@@ -252,21 +258,37 @@ h1=quiver(150,350,-100*sind(40),100*cosd(40),'color',[.2 .2 .2],'linewidth',2);
 text(125,320,'North')
 set(gca, 'fontsize', 12)
 
-subplot(413)
-plot(xg,smoothdata(Pdiss.*dalongdiss./1000,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]);
+subplot(513)
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
 hold on
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
+plot(xg,smoothdata(Pdiss.*dalongdiss./1000,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]);
 plot(xg,smoothdata(Pb.*dalongb./1000,'movmean',3),'-','linewidth',2,'color',[.8 .2 .2]);
 xlim([0,1400])
+text(.02,.9,'b','Fontsize',14,'Units','normalized')
 ylabel('{\itP_x}  [kW m^{-1}]','fontsize',14)
-xlim([0,1400])
+ylim([-5 15])
 set(gca,'xticklabels',[])
 grid on
-pos = get(gca, 'Position');
-pos(4) = pos(4)*1.3;
-set(gca, 'Position', pos)
+posb = get(gca, 'Position');
+posb(4) = .13;
+posb(2) = .27+.16
+set(gca, 'Position', posb)
 set(gca, 'fontsize', 12)
 
-subplot(414)
+
+subplot(514)
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hold on
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
 h2=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pdiss.*dalongdiss./1000,'movmean',5)./dx),'.k');
 set(h2,'color',[.7 .7 .7],'markersize',14)
 hold on
@@ -274,17 +296,40 @@ h1=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pb.*dalongb./1000,'movmean',11)./dx),'
 set(h1,'color',[.8 .2 .2],'markersize',14)
 ylim([-0.0500 0.05001])
 xlim([0,1400])
-
 grid on
+set(gca,'xticklabels',[])
+text(.02,.9,'c','Fontsize',14,'Units','normalized')
 ylabel('-{\Delta} {\itP_x}/{\Delta}{\itx}  [kW m^{-2}]','fontsize',14)
-xlabel('Alongshore distance [m]','fontsize',14)
-pos = get(gca, 'Position');
-pos(4) = pos(4)*1.3;
+posc = get(gca, 'Position')
+posc(4) = .13;
+posc(2) = .28
+set(gca, 'Position', posc)
+set(gca, 'fontsize', 12)
+
+subplot(515)
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hold on
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
+h1=plot(xf,medfilt(dall_vols(:,7),7),'linewidth',3,'color',rust);
+h2=plot(xf,medfilt(dall_vols(:,7),7)+lb_err(:,7),'--','color',rust);
+h3=plot(xf,medfilt(dall_vols(:,7),7)-lb_err(:,7),'--','color',rust);
+xlim([0,1400])
+ylim([-50 20])
+posd = get(gca, 'Position');
+posd(4) = .13
 set(gca, 'Position', pos)
 set(gca, 'fontsize', 12)
+grid on
+text(.02,.9,'d','Fontsize',14,'Units','normalized')
+ylabel('Volume Change [m^3/m]','fontsize',14)
+xlabel('Alongshore distance [m]','fontsize',14)
 print('wave_power_plot.png','-dpng','-r300') 
 %% Plot runup and slope
-figure(3);clf
+figure(13);clf
 ax1=subplot(211);
 h2=plot(xg,smoothdata(R2b,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]);
 hold on
@@ -311,7 +356,7 @@ xlim([0,1400])
 print('R2_slopeplot.png','-dpng','-r300') 
 
 %% Plot hs and h
-figure(4);clf
+figure(14);clf
 ax1=subplot(211);
 h2=plot(xg,smoothdata(hsdiss,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]);
 hold on
@@ -338,21 +383,30 @@ xlim([0,1400])
 print('hs_hplot.png','-dpng','-r300') 
 
 %% plot hs and runup
-figure(5);clf
+figure(15);clf
 ph = .41
 gap = (1-(2*ph))./4
 px = [2*gap, 3*gap+ph]
 
 ax1=subplot(211);
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hold on
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
+
 h2=plot(xg,smoothdata(hsdiss,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]);
 hold on
 h1=plot(xg,smoothdata(hsb,'movmean',3),'-','linewidth',2,'color',[.8 .2 .2]);
 set(gca, 'fontsize', 12)
 ylabel('{\itH_s} [m]','fontsize',14)
-plot([390 500],[2.4 2.4],'-r','linewidth',6)
-plot([230 390],[2.4 2.4],'-r','linewidth',6,'color',[.9 .7 .7])
-plot([100 230],[2.4 2.4],'-r','linewidth',6)
+plot([430 555],[2.45 2.45],'-r','linewidth',6)
+plot([265 340],[2.45 2.45],'-k','linewidth',6,'color',[.6 .6 .6])
+%plot([100 230],[2.4 2.4],'-r','linewidth',6)
 %text( 245, 2.3,'geotubes','fontsize',12)
+text(.02,.95,'a','Fontsize',14,'Units','normalized')
 
 legend([h1,h2],'{\itH_s} at breakpoint','{\itH_s} at max. diss.','location','southwest')
 set(gca,'xticklabels',[])
@@ -365,19 +419,28 @@ pos(4)=ph
 set(gca, 'Position', pos)
 
 ax1=subplot(212);
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hold on
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
+h5=plot(xg,1.43*ones(size(xg)),':k'); %MHHW
+h6=plot(xxf,dtoey,'--k');
 h2=plot(xg,smoothdata(R2b,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]);
 hold on
 h1=plot(xg,smoothdata(R2b+wlev,'movmean',3),'-','linewidth',2,'color',[.8 .2 .2]);
 set(gca, 'fontsize', 12)
 ylabel('Runup {\itR}_2, Elevation [m]','fontsize',14)
-h3=plot([390 500],[4.8 4.8],'-r','linewidth',6);
-h4=plot([230 390],[4.8 4.8],'-r','linewidth',6,'color',[.9 .7 .7]);
-h5=plot([100 230],[4.8 4.8],'-r','linewidth',6);
-h6=plot([1070 1100],[2.7 2.7],'-r','linewidth',4,'color',[.4 .4 .4]);
-legend([h1,h2,h3,h4,h6],'TWL = {\itR}_2 + tides + surge','Runup {\itR}_2','Max. Erosion','Geotubes','Overwash channel','location','northeast');
+h3=plot([430 555],[5.9 5.9],'-r','linewidth',6)
+h4=plot([265 340],[5.9 5.9],'-k','linewidth',6,'color',[.6 .6 .6])
+%h6=plot([1070 1100],[2.7 2.7],'-r','linewidth',4,'color',[.4 .4 .4]);
+legend([h1,h2,h4,h3,h6,h5],'TWL = {\itR}_2 + tides + surge','Runup {\itR}_2','Geotubes','Max. Erosion','Dune Toe','MHHW','location','northeast');
+text(.02,.95,'b','Fontsize',14,'Units','normalized')
 
 % text( 245, 4.8,'geotubes','fontsize',12)
-ylim([0, 5])
+ylim([0, 6])
 xlim([0,1400])
 xlabel('Alongshore distance [m]','fontsize',14)
 grid on
@@ -400,7 +463,7 @@ dhym = [NaN*ones(126,1) dhy];
 slopemap = sqrt(dhxm.^2 + dhym.^2 );
 nanmaskh=ones(size(h));
 nanmaskh( -h >=3 )=NaN;
-figure(8); clf
+figure(16); clf
 subplot(211)
 pcolor(xg,yg,slopemap.*nanmaskh)
 hold on
@@ -458,6 +521,6 @@ hmapNaN = h.*nanmaskh;
 ok = ~isnan(slopemapNaN(:));
 slopelist = slopemapNaN(ok);
 hlist = hmapNaN(ok);
-figure(9); clf
+figure(19); clf
 plot(-hlist,slopelist,'.')
 ylim([0 3])
