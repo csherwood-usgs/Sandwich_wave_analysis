@@ -300,13 +300,14 @@ grid on
 set(gca,'xticklabels',[])
 text(.02,.9,'c','Fontsize',14,'Units','normalized')
 ylabel('-{\Delta} {\itP_x}/{\Delta}{\itx}  [kW m^{-2}]','fontsize',14)
-posc = get(gca, 'Position')
+posc = get(gca, 'Position');
 posc(4) = .13;
 posc(2) = .28
+
 set(gca, 'Position', posc)
 set(gca, 'fontsize', 12)
 
-subplot(515)
+subplot('position',[0.1300    0.1100    0.7750    0.1300])
 hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
 set(hf,'edgecolor','none','facealpha',.6)
 hold on
@@ -319,11 +320,13 @@ h2=plot(xf,medfilt(dall_vols(:,7),7)+lb_err(:,7),'--','color',rust);
 h3=plot(xf,medfilt(dall_vols(:,7),7)-lb_err(:,7),'--','color',rust);
 xlim([0,1400])
 ylim([-50 20])
-posd = get(gca, 'Position');
-posd(4) = .13
-set(gca, 'Position', pos)
 set(gca, 'fontsize', 12)
 grid on
+posd = get(gca, 'Position');
+posd(4) = .13;
+posd(2) = 0.11;
+set(gca, 'Position', pos)
+
 text(.02,.9,'d','Fontsize',14,'Units','normalized')
 ylabel('Volume Change [m^3/m]','fontsize',14)
 xlabel('Alongshore distance [m]','fontsize',14)
@@ -383,6 +386,10 @@ xlim([0,1400])
 print('hs_hplot.png','-dpng','-r300') 
 
 %% plot hs and runup
+
+% first, load data from 10 Feb survey of dune toe
+plot_survey_data
+
 figure(15);clf
 ph = .41
 gap = (1-(2*ph))./4
@@ -426,8 +433,9 @@ hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
 set(hf,'edgecolor','none','facealpha',.6)
 hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
 set(hf,'edgecolor','none','facealpha',.6)
-h5=plot(xg,1.43*ones(size(xg)),':k'); %MHHW
-h6=plot(xxf,dtoey,'--k');
+h5=plot(xg,1.43*ones(size(xg)),':k','linewidth',2); %MHHW
+% h6=plot(xxf,dtoey,'--k'); % from my attempts to find inflection point
+h6=plot(xsurvey,medfilt(elev,5),'--k','linewidth',2,'color',[.3 .3 .3]);
 h2=plot(xg,smoothdata(R2b,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]);
 hold on
 h1=plot(xg,smoothdata(R2b+wlev,'movmean',3),'-','linewidth',2,'color',[.8 .2 .2]);

@@ -185,6 +185,7 @@ plot(xf,mhwm,'.b')
 plot(xf,mhwm-xoff,'.k')
 title('Mean elevation and back of transects')
 %% find volume between mhwm and back of profile
+dzerr = 0.13 % 1.96 * sqrt ( 0.063^2 + 0.013^2 ) maybe a little optimistic
 dune_vols = nan*ones(nx,nmap);
 dv_err  = nan*ones(nx,nmap);
 hb_vols = nan*ones(nx,nmap);
@@ -199,19 +200,19 @@ for is=1:nmap
       iend = round(mhhw(ir,is));
       if(~isnan(istrt+iend))
          dune_vols(ir,is)=sum(z(istrt:iend,ir,is));
-         dv_err(ir,is) = sqrt(2*0.08^2)*(iend-istrt);
+         dv_err(ir,is) = dzerr*(iend-istrt);
       end
       % high beach volume (above MHW)
       iend = round(mhw(ir,is));
       if(~isnan(istrt+iend))
          hb_vols(ir,is)=sum(z(istrt:iend,ir,is));
-         hb_err(ir,is) = sqrt(2*0.08^2)*(iend-istrt);
+         hb_err(ir,is) = dzerr*(iend-istrt);
       end
       % low beach volume (above MHW)
       iend = round(mwl(ir,is));
       if(~isnan(istrt+iend))
          lb_vols(ir,is)=sum(z(istrt:iend,ir,is));
-         lb_err(ir,is) = sqrt(2*0.08^2)*(iend-istrt);
+         lb_err(ir,is) = dzerr*(iend-istrt);
       end
    end
 end
@@ -449,9 +450,9 @@ colorbar
 ax3=subplot(313);
 v = [-2.5:.25:2.5];
 %pcolorjw(xf,y,zd(:,:,is)
-% for plotting purposes, zero out +/- 12 cm
+% for plotting purposes, zero out +/- 13 cm
 zdd2 = zdd;
-zdd2(abs(zdd)<.12)=0;
+zdd2(abs(zdd)<.13)=0;
 [C,hc]=contourf(xf,y,zdd2,v,'linestyle','none');
 hold on
 %ts = [char(titles(is+1)),' minus ',char(titles(is))]
