@@ -1,6 +1,5 @@
 % capecodbay_anal - Analyze stationary SWAN runs for Sandwich
-
-%clear
+% Run analyze_topo_maps.m first to get create volume change arrays
 fnam='../swan_stationary/grids/CCBay_FG2.nc';
 %% 2017 runs - peak of Feb storm
 datt = '20170213_000000'
@@ -178,14 +177,13 @@ for i=1:ncols
    [R2diss(i),S,setup, Sinc, SIG, ir, R16] = calcR2(Hodiss(i),Tpdiss(i),atan(slopedry(i)),0);
 
 end
-
 %% calculate Iribarren number at breakpoint according to Battjes (1974); Komar (1988, p. 210) Holthuijsen (2007) and Wikipedia
 for i=1:ncols
-Lo(i) = (g/(2.*pi))*Tpb(i).^2;
-eb(i) = slopeb(i)./( sqrt( hsb(i)/Lo(i) ) );
-eo(i) = slopeb(i)./( sqrt( Hob(i)/Lo(i) ) );
-% surf-scaling paramter (Guza and Inman, 1975)
-ep(i) = 0.5*hsb(i).*(2.*pi/Tpb(i)).^2/(g*slopeb(i).^2);
+   Lo(i) = (g/(2.*pi))*Tpb(i).^2;
+   eb(i) = slopeb(i)./( sqrt( hsb(i)/Lo(i) ) );
+   eo(i) = slopeb(i)./( sqrt( Hob(i)/Lo(i) ) );
+   % surf-scaling paramter (Guza and Inman, 1975)
+   ep(i) = 0.5*hsb(i).*(2.*pi/Tpb(i)).^2/(g*slopeb(i).^2);
 end
 %% Bathy figure
 minush = -h;
@@ -219,6 +217,17 @@ text(125,320,'North')
 %    end
 % end
 
+%% List of groin locations
+gbuf = 20;
+gloc = [138 399 582 767 946 1293];
+
+% make a nan list to blank out groins in grid coords
+gnang = ones(size(xg));
+hold on
+for i=1:length(gloc)
+   gnang(xg>=(gloc(i)-gbuf) & xg<=(gloc(i)+gbuf)) = NaN;
+end
+gnang = (gnang');
 %% Wave power plot
 gray = [.8 .8 .8];
 dkgray = [.7 .7 .7];
@@ -266,19 +275,20 @@ hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
 set(hf,'edgecolor','none','facealpha',.6)
 hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
 set(hf,'edgecolor','none','facealpha',.6)
-plot(xg,smoothdata(Pdiss.*dalongdiss./1000,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]);
-plot(xg,smoothdata(Pb.*dalongb./1000,'movmean',3),'-','linewidth',2,'color',[.8 .2 .2]);
+plot(xg,smoothdata(Pdiss.*dalongdiss./1000,'movmean',3).*gnang,'-','linewidth',2,'color',[.7 .7 .7]);
+plot(xg,smoothdata(Pb.*dalongb./1000,'movmean',3).*gnang,'-','linewidth',2,'color',[.8 .2 .2]);
 xlim([0,1400])
 text(.02,.9,'b','Fontsize',14,'Units','normalized')
 ylabel('{\itP_x}  [kW m^{-1}]','fontsize',14)
 ylim([-5 15])
 set(gca,'xticklabels',[])
 grid on
+set(gca, 'fontsize', 12)
+
 posb = get(gca, 'Position');
 posb(4) = .13;
 posb(2) = .27+.16
 set(gca, 'Position', posb)
-set(gca, 'fontsize', 12)
 
 
 subplot(514)
@@ -289,10 +299,10 @@ hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
 set(hf,'edgecolor','none','facealpha',.6)
 hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
 set(hf,'edgecolor','none','facealpha',.6)
-h2=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pdiss.*dalongdiss./1000,'movmean',5)./dx),'.k');
+h2=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pdiss.*dalongdiss./1000,'movmean',5)./dx).*gnang(1:end-1),'.k');
 set(h2,'color',[.7 .7 .7],'markersize',14)
 hold on
-h1=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pb.*dalongb./1000,'movmean',11)./dx),'.r');
+h1=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pb.*dalongb./1000,'movmean',11)./dx).*gnang(1:end-1),'.r');
 set(h1,'color',[.8 .2 .2],'markersize',14)
 ylim([-0.0500 0.05001])
 xlim([0,1400])
@@ -302,7 +312,7 @@ text(.02,.9,'c','Fontsize',14,'Units','normalized')
 ylabel('-{\Delta} {\itP_x}/{\Delta}{\itx}  [kW m^{-2}]','fontsize',14)
 posc = get(gca, 'Position');
 posc(4) = .13;
-posc(2) = .28
+posc(2) = .27
 
 set(gca, 'Position', posc)
 set(gca, 'fontsize', 12)
@@ -315,22 +325,24 @@ hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
 set(hf,'edgecolor','none','facealpha',.6)
 hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
 set(hf,'edgecolor','none','facealpha',.6)
-h1=plot(xf,medfilt(dall_vols(:,7),7),'linewidth',3,'color',rust);
-h2=plot(xf,medfilt(dall_vols(:,7),7)+lb_err(:,7),'--','color',rust);
-h3=plot(xf,medfilt(dall_vols(:,7),7)-lb_err(:,7),'--','color',rust);
+h1=plot(xf,medfilt(dall_vols(:,7),7).*gnan,'linewidth',3,'color',rust);
+h2=plot(xf,medfilt(dall_vols(:,7),7).*gnan+lb_err(:,7),'--','color',rust);
+h3=plot(xf,medfilt(dall_vols(:,7),7).*gnan-lb_err(:,7),'--','color',rust);
 xlim([0,1400])
 ylim([-50 20])
 set(gca, 'fontsize', 12)
 grid on
+text(.02,.9,'d','Fontsize',14,'Units','normalized')
+hy=ylabel('Volume Change [m^3/m]','fontsize',14);
+hyp=get(hy,'position')
+hyp=hyp
+xlabel('Alongshore distance [m]','fontsize',14)
 posd = get(gca, 'Position');
 posd(4) = .13;
 posd(2) = 0.11;
-set(gca, 'Position', pos)
+set(gca, 'Position', posd)
 
-text(.02,.9,'d','Fontsize',14,'Units','normalized')
-ylabel('Volume Change [m^3/m]','fontsize',14)
-xlabel('Alongshore distance [m]','fontsize',14)
-print('wave_power_plot.png','-dpng','-r300') 
+print('wave_power_plot.png','-dpng','-r600') 
 %% Plot runup and slope
 figure(13);clf
 ax1=subplot(211);
