@@ -236,7 +236,14 @@ pink = [.9 .7 .7];
 blue = [.4 .4 .8];
 ylims = [-50 20];
 
-figure(12);clf
+gng = ones(size(xg)); % don't hide near-groin data
+gn = ones(size(xf));
+% gng = gnang;          % do hide near groin data
+% gn = gnan;
+
+fig=figure(12);clf
+fig.PaperUnits = 'inches'
+fig.PaperPosition = [ 0 0 12.7 14 ];
 subplot(211)
 pcolorjw(xg,yg,P./1000)
 hold on
@@ -275,8 +282,8 @@ hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
 set(hf,'edgecolor','none','facealpha',.6)
 hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
 set(hf,'edgecolor','none','facealpha',.6)
-plot(xg,smoothdata(Pdiss.*dalongdiss./1000,'movmean',3).*gnang,'-','linewidth',2,'color',[.7 .7 .7]);
-plot(xg,smoothdata(Pb.*dalongb./1000,'movmean',3).*gnang,'-','linewidth',2,'color',[.8 .2 .2]);
+plot(xg,smoothdata(Pdiss.*dalongdiss./1000,'movmean',3).*gng,'-','linewidth',2,'color',[.7 .7 .7]);
+plot(xg,smoothdata(Pb.*dalongb./1000,'movmean',3).*gng,'-','linewidth',2,'color',[.8 .2 .2]);
 xlim([0,1400])
 text(.02,.9,'b','Fontsize',14,'Units','normalized')
 ylabel('{\itP_x}  [kW m^{-1}]','fontsize',14)
@@ -290,7 +297,6 @@ posb(4) = .13;
 posb(2) = .27+.16
 set(gca, 'Position', posb)
 
-
 subplot(514)
 hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
 set(hf,'edgecolor','none','facealpha',.6)
@@ -299,10 +305,10 @@ hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
 set(hf,'edgecolor','none','facealpha',.6)
 hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
 set(hf,'edgecolor','none','facealpha',.6)
-h2=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pdiss.*dalongdiss./1000,'movmean',5)./dx).*gnang(1:end-1),'.k');
+h2=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pdiss.*dalongdiss./1000,'movmean',5)./dx).*gng(1:end-1),'.k');
 set(h2,'color',[.7 .7 .7],'markersize',14)
 hold on
-h1=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pb.*dalongb./1000,'movmean',11)./dx).*gnang(1:end-1),'.r');
+h1=plot(xg(1:end-1)+dx/2,-diff(smoothdata(Pb.*dalongb./1000,'movmean',11)./dx).*gng(1:end-1),'.r');
 set(h1,'color',[.8 .2 .2],'markersize',14)
 ylim([-0.0500 0.05001])
 xlim([0,1400])
@@ -325,9 +331,9 @@ hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
 set(hf,'edgecolor','none','facealpha',.6)
 hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
 set(hf,'edgecolor','none','facealpha',.6)
-h1=plot(xf,medfilt(dall_vols(:,7),7).*gnan,'linewidth',3,'color',rust);
-h2=plot(xf,medfilt(dall_vols(:,7),7).*gnan+lb_err(:,7),'--','color',rust);
-h3=plot(xf,medfilt(dall_vols(:,7),7).*gnan-lb_err(:,7),'--','color',rust);
+h1=plot(xf,medfilt(dall_vols(:,7),7).*gn,'linewidth',3,'color',rust);
+h2=plot(xf,medfilt(dall_vols(:,7),7).*gn+lb_err(:,7),'--','color',rust);
+h3=plot(xf,medfilt(dall_vols(:,7),7).*gn-lb_err(:,7),'--','color',rust);
 xlim([0,1400])
 ylim([-50 20])
 set(gca, 'fontsize', 12)
