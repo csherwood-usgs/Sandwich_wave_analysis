@@ -235,31 +235,36 @@ ddune_vols = diff(dune_vols,1,2);
 dhb_vols = diff(hb_vols,1,2);
 dlb_vols = diff(lb_vols,1,2);
 %% plot of volume change and inferred transport rate
-figure(2); clf
+fig=figure(4);clf
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [ 0 0 9 6 ];
+
 subplot(211)
-h1=plot(xf,medfilt(dall_vols(:,7),7),'linewidth',3);
+h1=plot(xf,medfilt(dall_vols(:,7),7).*gnan,'linewidth',3);
 hold on
 set(h1,'color',[.8 .2 .2])
-h2=plot(xf,medfilt(dall_vols(:,7),7)+lb_err(:,7),'--');
+h2=plot(xf,medfilt(dall_vols(:,7),7).*gnan+lb_err(:,7),'--');
 set(h2,'color',[.8 .2 .2])
-h3=plot(xf,medfilt(dall_vols(:,7),7)-lb_err(:,7),'--');
+h3=plot(xf,medfilt(dall_vols(:,7),7).*gnan-lb_err(:,7),'--');
 set(h3,'color',[.8 .2 .2]);
 
-h1b=plot(xf,medfilt(ddune_vols(:,7),7),'linewidth',3);
+h1b=plot(xf,medfilt(ddune_vols(:,7),7).*gnan,'linewidth',3);
 hold on
 set(h1b,'color',[.2 .2 .8])
-h2b=plot(xf,medfilt(ddune_vols(:,7),7)+dv_err(:,7),'--');
+h2b=plot(xf,medfilt(ddune_vols(:,7),7).*gnan+dv_err(:,7),'--');
 set(h2b,'color',[.2 .2 .8])
-h3b=plot(xf,medfilt(ddune_vols(:,7),7)-dv_err(:,7),'--');
+h3b=plot(xf,medfilt(ddune_vols(:,7),7).*gnan-dv_err(:,7),'--');
 set(h3b,'color',[.2 .2 .8]);
 xlim([0,1400])
 grid on
 text(.02,.95,'a','Fontsize',14,'Units','normalized')
-ylabel('Volume Change [m^3/m]')
-legend([h1b;h1],'Dunes','All')
+ylabel('Volume Change [m^3/m]','fontsize',14)
+set(gca,'fontsize',12)
+
+legend([h1b;h1],'Dunes','All','location','southeast')
 
 subplot(212)
-dv = flipud((dall_vols(fgd:lgd,7)));
+dv = flipud((dall_vols(fgd:lgd,7)).*gnan(fgd:lgd));
 dv(isnan(dv))=0;
 h1c=plot(xf(fgd:lgd),flipud(-cumsum(dv))/(3600*3),'linewidth',2,'color',[.8 .2 .2]);
 hold on
@@ -270,7 +275,10 @@ h2c=plot(xf,flipud(-cumsum(dv))/(3600*3),'linewidth',2,'color',[.2 .2 .8]);
 xlim([0,1400])
 grid on
 text(.02,.95,'b','Fontsize',14,'Units','normalized')
-ylabel('Inferred Alongshore Flux [m^3/s]')
+ylabel('Inferred Alongshore Flux [m^3/s]','fontsize',14)
+xlabel('Alongshore Distance [m]')
+set(gca,'fontsize',12)
+print('vol_change_cum_flux.png', '-dpng', '-r 200')
 %% shoreline location differences
 dmwl = diff(mwl,1,2);
 dmhw = diff(mhw,1,2);
@@ -286,7 +294,9 @@ dmhw(122:123,7)=NaN;
 dmhw(1276:1278,7)=NaN;
 dmhw(1284,7)=NaN;
 %% plot shoreline change and volume change
-figure(3);clf
+fig=figure(3);clf
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [ 0 0 9 6 ];
 subplot(211)
 % the median horizontal error of shoreline locations,based on the slope and vertical precision of 8 cm
 % is +/-1.9 m...try to make this band about 4-m wide
@@ -325,6 +335,8 @@ text(.02,.95,'b','Fontsize',14,'Units','normalized')
 ylabel('Volume Change [m^3/m]','fontsize',14)
 set(gca, 'fontsize', 12)
 xlabel('Alongshore distance [m]','fontsize',14)
+print('vol_change_shoreline_change.png', '-dpng', '-r 200')
+
 %% find profile points
 % dimension arrays
 peaks = nan*ones(nx,2,nmap);
