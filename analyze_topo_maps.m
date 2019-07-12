@@ -544,3 +544,5 @@ text(54,5.7,'P3','fontsize',14)
 xlabel('Cross-shore distance [m]','fontsize',14)
 grid on
 print('compare_profiles.png','-dpng','-r300')
+%% save stuff so this dones not have to be re-run prior to stat. analysis
+save sandwich_vars xf gnan dall_vols ddune_vols mwl_rate mhw_rate mhhw_rate

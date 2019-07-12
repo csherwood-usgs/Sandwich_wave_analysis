@@ -1,13 +1,30 @@
 % capecodbay_anal - Analyze stationary SWAN runs for Sandwich
 % Run analyze_topo_maps.m first to get create volume change arrays
+%% 2017 runs - peak of Feb storm - grid 3
+if(1)
+datt = '20170213_000000'
+fnam='../swan_stationary/grids/CCBay_FG3.nc';
+
+wlev = 2.21
+rundir = '../swan_stationary/H2017_0d_2p21_stat3/'
+rname = '2017 3p44m, 0\circ, +2.21 m'
+pname = '2017_3p44m_0d_2p21.png'
+% wlev = 1.43
+% rundir = './H2017_0d_1p43_stat/'
+% rname = '2017 3p44m, 0\circ, +1.43 m'
+% pname = '2017_3p44m_0d_1p433.png'
+end
+%% 2017 runs - peak of Feb storm - used for paper
+if(0)
 fnam='../swan_stationary/grids/CCBay_FG2.nc';
-%% 2017 runs - peak of Feb storm
+
 datt = '20170213_000000'
 
 wlev = 2.21
 rundir = '../swan_stationary/H2017_0d_2p21_stat/'
 rname = '2017 3p44m, 0\circ, +2.21 m'
 pname = '2017_3p44m_0d_2p21.png'
+end
 % wlev = 1.43
 % rundir = './H2017_0d_1p43_stat/'
 % rname = '2017 3p44m, 0\circ, +1.43 m'
@@ -50,6 +67,9 @@ dx = 5;
 dy = 5;
 %% Read the grid
 h=ncread(fnam,'h')';
+if(1)
+   h = h';
+end
 [nrows, ncols] = size(h)
 lon=ncread(fnam,'lon_rho')';
 lat=ncread(fnam,'lat_rho')';
@@ -217,6 +237,9 @@ text(125,320,'North')
 %    end
 % end
 
+%% Load needed variables that were produced by analyze_topomaps.m
+load sandwich_vars
+
 %% List of groin locations
 gbuf = 20;
 gloc = [138 399 582 767 946 1293];
@@ -244,6 +267,7 @@ gn = ones(size(xf));
 fig=figure(12);clf
 fig.PaperUnits = 'inches'
 fig.PaperPosition = [ 0 0 12.7 14 ];
+
 subplot(211)
 pcolorjw(xg,yg,P./1000)
 hold on
@@ -348,7 +372,7 @@ posd(4) = .13;
 posd(2) = 0.11;
 set(gca, 'Position', posd)
 
-print('wave_power_plot.png','-dpng','-r600') 
+%print('wave_power_plot_grid3.png','-dpng','-r200') 
 %% Plot runup and slope
 figure(13);clf
 ax1=subplot(211);
