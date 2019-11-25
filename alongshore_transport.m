@@ -411,8 +411,11 @@ end
 dPdiss_mean = dPdiss_sum ./nrun;
 dPb_mean = dPb_sum ./nrun
 
-plot(xg(1:end-1)+dx/2,smoothdata(dPb_mean,'movmean',13),'-','linewidth',2,'color',[.2 .2 .2]);
-plot(xg(1:end-1)+dx/2,smoothdata(dPdiss_mean,'movmean',13),'-','linewidth',2,'color',[1 .2 .2]);
+% plot(xg(1:end-1)+dx/2,smoothdata(dPb_mean,'movmean',13),'-','linewidth',2,'color',[.2 .2 .2]);
+% plot(xg(1:end-1)+dx/2,smoothdata(dPdiss_mean,'movmean',13),'-','linewidth',2,'color',[1 .2 .2]);
+
+plot(xg(1:end-1)+dx/2,smoothdata(-diff(Pb_mean),'movmean',5),'-','linewidth',2,'color',[.2 .2 .2]);
+plot(xg(1:end-1)+dx/2,smoothdata(-diff(Pdiss_mean),'movmean',5),'-','linewidth',2,'color',[1 .2 .2]);
 
 ylim([-0.150 0.1501])
 xlim([0,1400])
