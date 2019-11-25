@@ -13,13 +13,24 @@ mrun(1).rundir = '../swan_stationary/H2017_0d_2p21_stat/'
 mrun(1).rname = '2017 3p44m, 0\circ, +2.21 m, FG2'
 mrun(1).fnam='../swan_stationary/grids/CCBay_FG2.nc';
 mrun(1).pname = '2017_3p44m_0d_2p21_FG2'
+mrun(1).descrip = '2013 USACE lidar + 2017-01-25 SfM' 
 
 mrun(2).datt = '20170213_000000'
 mrun(2).wlev = 2.21
-mrun(2).rundir = '../swan_stationary/H2017_0d_2p21_stat4/'
-mrun(2).rname = '2017 3p44m, 0\circ, +2.21 m, FG4'
-mrun(2).fnam='../swan_stationary/grids/CCBay_FG4.nc';
-mrun(2).pname = '2017_3p44m_0d_2p21_FG4'
+mrun(2).rundir = '../swan_stationary/H2017_0d_2p21_stat3/'
+mrun(2).rname = '2017 3p44m, 0\circ, +2.21 m, FG3'
+mrun(2).fnam='../swan_stationary/grids/CCBay_FG3.nc';
+mrun(2).pname = '2017_3p44m_0d_2p21_FG3'
+mrun(2).descrip = '2017-04-27 Traykovski jetyak + 2017-04-28 SfM' 
+
+mrun(3).datt = '20170213_000000'
+mrun(3).wlev = 2.21
+mrun(3).rundir = '../swan_stationary/H2017_0d_2p21_stat5/'
+mrun(3).rname = '2017 3p44m, 0\circ, +2.21 m, FG5'
+mrun(3).fnam='../swan_stationary/grids/CCBay_FG5.nc';
+mrun(3).pname = '2017_3p44m_0d_2p21_FG5'
+mrun(3).descrip = '2016-06-06 USGS jetyak + 2016-09-21 SfM' 
+%% loop over all model results
 
 for i=1:length(mrun)
    
@@ -148,7 +159,7 @@ for i=1:length(mrun)
    dacrossb = sind(-90-dirb+40);
    dacrossdiss = sind(-90-dirdiss+40);
    
-   %% Calculate runup
+   % Calculate runup
    % reverse shoal to get Ho (Nielsen, 2009, eq. 1.7.5)
    Ksb = 1../ sqrt( tanh(khb) .* (1.+2.*khb./sinh(2.*khb)) );
    Hob = hsb./Ksb;
@@ -163,7 +174,7 @@ for i=1:length(mrun)
       [R2diss(ii),S,setup, Sinc, SIG, ir, R16] = calcR2(Hodiss(ii),Tpdiss(ii),atan(slopedry(ii)),0);
       
    end
-   %% calculate Iribarren number at breakpoint according to Battjes (1974); Komar (1988, p. 210) Holthuijsen (2007) and Wikipedia
+   % calculate Iribarren number at breakpoint according to Battjes (1974); Komar (1988, p. 210) Holthuijsen (2007) and Wikipedia
    for ii=1:ncols
       Lo(ii) = (g/(2.*pi))*Tpb(i).^2;
       eb(ii) = slopeb(ii)./( sqrt( hsb(ii)/Lo(ii) ) );
@@ -174,19 +185,270 @@ for i=1:length(mrun)
    
    % assign these to the model structure
    varlist = {'ibr','idiss','idry','dissmx','slopedry','Tpb','Tpdiss','slopeb','slopediss',...
-      'hsb','hsdiss','khb','khdiss','hb','hdiss','Pb','Pdiss','dirb','dirdiss','R2b','R2diss','eb','eo','ep'}
+      'hsb','hsdiss','khb','khdiss','hb','hdiss','Pb','Pdiss','dirb','dirdiss','R2b','R2diss','eb','eo','ep',...
+      'dalongb','dalongdiss','dacrossb', 'dacrossdiss'}
    for iv = 1:length(varlist)
       eval( char( strcat('mrun(i).',varlist(iv),'=',varlist(iv),';')))
    end
-   % ...then clear them
-   for iv = 1:length(varlist)
-      disp( char( strcat(''clear '','',varlist(iv),'')))
-   end
+%    % ...then clear them
+%    for iv = 1:length(varlist)
+%       disp( char( strcat(''clear '','',varlist(iv),'')))
+%    end
 end
+%% other numbers we need
+nrun = length(mrun)
 
+rhow = 1030.;
+g = 9.81;
+
+[nrows, ncols] = size(mrun(1).h)
+xg = 0:dx:5*ncols-1;
+yg = 0:dy:5*nrows-1;
+[xgg,ygg]=meshgrid(xg,yg);
+
+% List of groin locations
+gbuf = 20;
+gloc = [138 399 582 767 946 1293];
+
+% make a nan list to blank out groins in grid coords
+gnang = ones(size(xg));
+hold on
+for i=1:length(gloc)
+   gnang(xg>=(gloc(i)-gbuf) & xg<=(gloc(i)+gbuf)) = NaN;
+end
+gnang = (gnang');
+% Wave power plot
+gray = [.8 .8 .8];
+dkgray = [.7 .7 .7];
+rust = [.8 .2 .2];
+pink = [.9 .7 .7];
+blue = [.4 .4 .8];
+ylims = [-50 20];
+
+load sandwich_vars
+% gng = ones(size(xg)); % don't hide near-groin data
+% gn = ones(size(xf));
+gng = gnang;          % do hide near groin data
+gn = gnan;
+
+
+%% plot
+hstack = zeros(3,nrows,ncols);
+pstack = zeros(3,nrows,ncols);
+dstack = zeros(3,nrows,ncols);
+
+for i=1:nrun
+   hstack(i,:,:)=mrun(i).h;
+   pstack(i,:,:)=mrun(i).P;
+   dstack(i,:,:)=mrun(i).diss;
+end
+hmin = min(hstack,[],1);
+hmax = max(hstack,[],1);
+hrange = squeeze( hmax-hmin );
+
+pmin = nanmin(pstack,[],1);
+pmax = nanmax(pstack,[],1);
+pmean = squeeze(nanmean(pstack,1));
+prange = squeeze( pmax-pmin )./pmean;
+prange(isnan(prange))=0.;
+
+dmin = nanmin(dstack,[],1);
+dmax = nanmax(dstack,[],1);
+dmean = squeeze(nanmean(dstack,1));
+drange = squeeze( dmax-dmin )./dmean;
+%% plot h grids
+figure(1)
+subplot(2,2,1)
+pcolorjw(-mrun(1).h)
+caxis([-8 8])
+colorbar
+title(strcat(mrun(1).descrip,' Bathymetry [m]'))
+
+subplot(2,2,2)
+pcolorjw(-mrun(2).h)
+caxis([-8 8])
+colorbar
+title(strcat(mrun(2).descrip,' Bathymetry [m]'))
+
+subplot(2,2,3)
+pcolorjw(-mrun(3).h)
+caxis([-8 8])
+colorbar
+title(strcat(mrun(2).descrip,' Bathymetry [m]'))
+
+subplot(2,2,4)
+pcolorjw(hrange)
+caxis([0,2])
+colorbar
+title(strcat('Range in Bathymetry [m]'))
+
+%% plot P grids
+figure(2)
+subplot(2,2,1)
+pcolorjw(mrun(1).P)
+title(strcat(mrun(1).descrip,' Power'))
+%caxis([-8 8])
+colorbar
+
+subplot(2,2,2)
+pcolorjw(mrun(2).P)
+%caxis([-8 8])
+colorbar
+title(strcat(mrun(2).descrip,' Power'))
+
+subplot(2,2,3)
+pcolorjw(mrun(3).P)
+%caxis([-8 8])
+colorbar
+title(strcat(mrun(3).descrip,' Power'))
+
+subplot(2,2,4)
+pcolorjw(prange*100)
+hold on
+contour(prange*100,[0,100.,200],'-w')
+caxis([0,200])
+colorbar
+title('Range in Power (%)')
+%% plot dissipation grids
+figure(3)
+subplot(2,2,1)
+pcolorjw(mrun(1).diss)
+title(strcat(mrun(1).descrip,' Dissipation'))
+caxis([0 500])
+colorbar
+
+subplot(2,2,2)
+pcolorjw(mrun(2).diss)
+caxis([0 500])
+colorbar
+title(strcat(mrun(2).descrip,' Dissipation'))
+
+subplot(2,2,3)
+pcolorjw(mrun(3).diss)
+caxis([0 500])
+colorbar
+title(strcat(mrun(3).descrip,' Dissipation'))
+
+subplot(2,2,4)
+pcolorjw(drange*100)
+hold on
+contour(drange*100,[0,100.,200],'-w')
+caxis([0,200])
+colorbar
+title('Range in Dissipation (%)')
+%%
 theta = 0;
 phib = [0:5:90.]'
 Hb = 2.
 Qs = K*Hb.^(5/2)*sind(phib-theta).*cosd(phib-theta)
 
 plot(phib,Qs)
+%% alongshore components
+figure(4); clf;
+subplot(513)
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hold on
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
+for i=1:nrun
+plot(xg,smoothdata(mrun(i).Pdiss.*mrun(i).dalongdiss./1000,'movmean',3).*gng,'-','linewidth',2,'color',[.7 .7 .7]);
+plot(xg,smoothdata(mrun(i).Pb.*mrun(i).dalongb./1000,'movmean',3).*gng,'-','linewidth',2,'color',[.8 .2 .2]);
+end
+
+% calculate the mean and std dev
+Pdiss_sum = zeros(size(mrun(1).Pdiss));
+Pdiss_ss = Pdiss_sum;
+Pb_sum = Pdiss_sum;
+Pb_ss = Pdiss_sum;
+for i=1:nrun
+   Pdiss_sum = Pdiss_sum + mrun(i).Pdiss.*mrun(i).dalongdiss./1000;
+   Pb_sum = Pb_sum + mrun(i).Pb.*mrun(i).dalongdiss./1000;
+end
+Pdiss_mean = Pdiss_sum ./nrun;
+Pb_mean = Pb_sum ./nrun;
+
+plot(xg,Pb_mean.*gng,'-','linewidth',2,'color',[.2 .2 .2]);
+plot(xg,Pdiss_mean.*gng,'-','linewidth',2,'color',[1 .2 .2]);
+
+xlim([0,1400])
+text(.02,.9,'b','Fontsize',14,'Units','normalized')
+ylabel('{\itP_x}  [kW m^{-1}]','fontsize',14)
+ylim([-5 15])
+set(gca,'xticklabels',[])
+grid on
+set(gca, 'fontsize', 12)
+
+posb = get(gca, 'Position');
+posb(4) = .13;
+posb(2) = .27+.16
+set(gca, 'Position', posb)
+
+subplot(514)
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hold on
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
+for i=1:nrun
+   h2=plot(xg(1:end-1)+dx/2,-diff(smoothdata(mrun(i).Pdiss.*mrun(i).dalongdiss./1000,'movmean',5)./dx).*gng(1:end-1),'.k');
+   set(h2,'color',[.7 .7 .7],'markersize',14)
+   hold on
+   h1=plot(xg(1:end-1)+dx/2,-diff(smoothdata(mrun(i).Pb.*mrun(i).dalongb./1000,'movmean',11)./dx).*gng(1:end-1),'.r');
+   set(h1,'color',[.8 .2 .2],'markersize',14)
+end
+% calculate the mean and std dev
+dPdiss_sum = zeros(size(diff(mrun(1).Pdiss)));
+dPb_sum = dPdiss_sum;
+for i=1:nrun
+   dPdiss_sum = dPdiss_sum + -diff(gnang.*smoothdata(((mrun(i).Pdiss.*mrun(i).dalongdiss./1000)./dx ),'movmean',13));
+   dPb_sum = dPb_sum +       -diff(gnang.*smoothdata(((mrun(i).Pb.*mrun(i).dalongdiss./1000)./dx),'movmean',13));
+end
+dPdiss_mean = dPdiss_sum ./nrun;
+dPb_mean = dPb_sum ./nrun
+
+plot(xg(1:end-1)+dx/2,smoothdata(dPb_mean,'movmean',13),'-','linewidth',2,'color',[.2 .2 .2]);
+plot(xg(1:end-1)+dx/2,smoothdata(dPdiss_mean,'movmean',13),'-','linewidth',2,'color',[1 .2 .2]);
+
+ylim([-0.150 0.1501])
+xlim([0,1400])
+grid on
+set(gca,'xticklabels',[])
+text(.02,.9,'c','Fontsize',14,'Units','normalized')
+ylabel('-{\Delta} {\itP_x}/{\Delta}{\itx}  [kW m^{-2}]','fontsize',14)
+posc = get(gca, 'Position');
+posc(4) = .13;
+posc(2) = .27
+
+set(gca, 'Position', posc)
+set(gca, 'fontsize', 12)
+
+subplot('position',[0.1300    0.1100    0.7750    0.1300])
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hold on
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
+h1=plot(xf,medfilt1(dall_vols(:,7),7).*gn,'linewidth',3,'color',rust);
+h2=plot(xf,medfilt1(dall_vols(:,7),7).*gn+lb_err(:,7),'--','color',rust);
+h3=plot(xf,medfilt1(dall_vols(:,7),7).*gn-lb_err(:,7),'--','color',rust);
+xlim([0,1400])
+ylim([-50 20])
+set(gca, 'fontsize', 12)
+grid on
+text(.02,.9,'d','Fontsize',14,'Units','normalized')
+hy=ylabel('Volume Change [m^3/m]','fontsize',14);
+hyp=get(hy,'position')
+hyp=hyp
+xlabel('Alongshore distance [m]','fontsize',14)
+posd = get(gca, 'Position');
+posd(4) = .13;
+posd(2) = 0.11;
+set(gca, 'Position', posd)
+

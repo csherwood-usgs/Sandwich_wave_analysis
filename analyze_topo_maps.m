@@ -9,7 +9,6 @@ close all
 fnam = 'D:\crs\src\Raster_calcs\one_meter_test2.nc'
 %fnam = 'one_meter_test2.nc'
 
-
 x=ncread(fnam,'Alongshore')';
 y=ncread(fnam,'Cross-shore')';
 z=ncread(fnam,'__xarray_dataarray_variable__');
@@ -63,7 +62,7 @@ for ir=1:nx
    end
 end
 % get rid of some outliers
-mhwmf = medfilt(mhwm,15);
+mhwmf = medfilt1(mhwm,15);
 ireplace=find(abs(mhwmf-mhwm)>2);
 mhwm(ireplace)=mhwmf(ireplace);
 fprintf(1,'Replaced %d points.\n',length(ireplace))
@@ -206,21 +205,21 @@ lb_err  = nan*ones(nx,nmap);
 for is=1:nmap
    for ir=fgd:lgd
       % start on land side, end at MHHW, MHW, or MWL
-      istrt= imhwm(ir)-xoff(ir);
+      istrt= int32(imhwm(ir)-xoff(ir));
       % dune volume (above MHHW)
-      iend = round(mhhw(ir,is));
+      iend = int32(round(mhhw(ir,is)));
       if(~isnan(istrt+iend))
          dune_vols(ir,is)=sum(z(istrt:iend,ir,is));
          dv_err(ir,is) = dzerr*(iend-istrt);
       end
       % high beach volume (above MHW)
-      iend = round(mhw(ir,is));
+      iend = int32(round(mhw(ir,is)));
       if(~isnan(istrt+iend))
          hb_vols(ir,is)=sum(z(istrt:iend,ir,is));
          hb_err(ir,is) = dzerr*(iend-istrt);
       end
       % low beach volume (above MHW)
-      iend = round(mwl(ir,is));
+      iend = int32(round(mwl(ir,is)));
       if(~isnan(istrt+iend))
          lb_vols(ir,is)=sum(z(istrt:iend,ir,is));
          lb_err(ir,is) = dzerr*(iend-istrt);
@@ -243,17 +242,17 @@ subplot(211)
 h1=plot(xf,medfilt(dall_vols(:,7),7).*gnan,'linewidth',3);
 hold on
 set(h1,'color',[.8 .2 .2])
-h2=plot(xf,medfilt(dall_vols(:,7),7).*gnan+lb_err(:,7),'--');
+h2=plot(xf,medfilt1(dall_vols(:,7),7).*gnan+lb_err(:,7),'--');
 set(h2,'color',[.8 .2 .2])
-h3=plot(xf,medfilt(dall_vols(:,7),7).*gnan-lb_err(:,7),'--');
+h3=plot(xf,medfilt1(dall_vols(:,7),7).*gnan-lb_err(:,7),'--');
 set(h3,'color',[.8 .2 .2]);
 
-h1b=plot(xf,medfilt(ddune_vols(:,7),7).*gnan,'linewidth',3);
+h1b=plot(xf,medfilt1(ddune_vols(:,7),7).*gnan,'linewidth',3);
 hold on
 set(h1b,'color',[.2 .2 .8])
-h2b=plot(xf,medfilt(ddune_vols(:,7),7).*gnan+dv_err(:,7),'--');
+h2b=plot(xf,medfilt1(ddune_vols(:,7),7).*gnan+dv_err(:,7),'--');
 set(h2b,'color',[.2 .2 .8])
-h3b=plot(xf,medfilt(ddune_vols(:,7),7).*gnan-dv_err(:,7),'--');
+h3b=plot(xf,medfilt1(ddune_vols(:,7),7).*gnan-dv_err(:,7),'--');
 set(h3b,'color',[.2 .2 .8]);
 xlim([0,1400])
 grid on
@@ -300,19 +299,21 @@ fig.PaperPosition = [ 0 0 9 6 ];
 subplot(211)
 % the median horizontal error of shoreline locations,based on the slope and vertical precision of 8 cm
 % is +/-1.9 m...try to make this band about 4-m wide
-dmwlf = medfilt(dmwl,7).*gnan;
-h1=plot(xf,dmwlf(:,7),'linewidth',12,'color',[.9 .8 .8]);
-hold on
-h1=plot(xf,dmwlf(:,7),'linewidth',2,'color',[.9 .2 .2]);
-hold on
-plot(xf,dmwlf(:,7)+sqrt(2*serr(:,7)),'--r')
-plot(xf,dmwlf(:,7)-sqrt(2*serr(:,7)),'--r')
 
-dmhwf = medfilt(dmhw,7).*gnan;
-h2=plot(xf,dmhwf(:,7),'linewidth',14,'color',[.8 .8 .9]);
-h2=plot(xf,dmhwf(:,7),'linewidth',2,'color',[.2 .2 .9]);
-plot(xf,dmhwf(:,7)+sqrt(2*serr(:,7)),'--b')
-plot(xf,dmhwf(:,7)-sqrt(2*serr(:,7)),'--b')
+dmwlf = medfilt1(dmwl(:,7).*gnan);
+
+h1=plot(xf,dmwlf,'linewidth',12,'color',[.9 .8 .8]);
+hold on
+h1=plot(xf,dmwlf,'linewidth',2,'color',[.9 .2 .2]);
+hold on
+plot(xf,dmwlf+sqrt(2*serr(:,7)),'--r')
+plot(xf,dmwlf-sqrt(2*serr(:,7)),'--r')
+
+dmhwf = medfilt(dmhw(:,7).*gnan);
+h2=plot(xf,dmhwf,'linewidth',14,'color',[.8 .8 .9]);
+h2=plot(xf,dmhwf,'linewidth',2,'color',[.2 .2 .9]);
+plot(xf,dmhwf+sqrt(2*serr(:,7)),'--b')
+plot(xf,dmhwf-sqrt(2*serr(:,7)),'--b')
 legend([h1;h2],'MWL','MHW','location','southwest')
 grid on
 ylabel('Shoreline Change [m]','fontsize',14)
@@ -349,7 +350,7 @@ mhw = nan*ones(nx,nmap);
 is = 7;
 ir = 970;
 for is=1:nmap
-   %figure(8);clf
+   figure(8);clf
    for ir=fgd:lgd
       zt = zs(:,ir);
       zok = flipud(zt(~isnan(zt)));
@@ -545,4 +546,4 @@ xlabel('Cross-shore distance [m]','fontsize',14)
 grid on
 print('compare_profiles.png','-dpng','-r300')
 %% save stuff so this dones not have to be re-run prior to stat. analysis
-save sandwich_vars xf gnan dall_vols ddune_vols mwl_rate mhw_rate mhhw_rate
+save sandwich_vars xf gnan dall_vols ddune_vols mwl_rate mhw_rate mhhw_rate lb_err
