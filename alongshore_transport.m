@@ -17,19 +17,20 @@ mrun(1).descrip = '2013 USACE lidar + 2017-01-25 SfM'
 
 mrun(2).datt = '20170213_000000'
 mrun(2).wlev = 2.21
-mrun(2).rundir = '../swan_stationary/H2017_0d_2p21_stat3/'
-mrun(2).rname = '2017 3p44m, 0\circ, +2.21 m, FG3'
-mrun(2).fnam='../swan_stationary/grids/CCBay_FG3.nc';
-mrun(2).pname = '2017_3p44m_0d_2p21_FG3'
-mrun(2).descrip = '2017-04-27 Traykovski jetyak + 2017-04-28 SfM' 
+mrun(2).rundir = '../swan_stationary/H2017_0d_2p21_stat5/'
+mrun(2).rname = '2017 3p44m, 0\circ, +2.21 m, FG5'
+mrun(2).fnam='../swan_stationary/grids/CCBay_FG5.nc';
+mrun(2).pname = '2017_3p44m_0d_2p21_FG5'
+mrun(2).descrip = '2016-06-06 USGS jetyak + 2016-09-21 SfM' 
 
 mrun(3).datt = '20170213_000000'
 mrun(3).wlev = 2.21
-mrun(3).rundir = '../swan_stationary/H2017_0d_2p21_stat5/'
-mrun(3).rname = '2017 3p44m, 0\circ, +2.21 m, FG5'
-mrun(3).fnam='../swan_stationary/grids/CCBay_FG5.nc';
-mrun(3).pname = '2017_3p44m_0d_2p21_FG5'
-mrun(3).descrip = '2016-06-06 USGS jetyak + 2016-09-21 SfM' 
+mrun(3).rundir = '../swan_stationary/H2017_0d_2p21_stat3/'
+mrun(3).rname = '2017 3p44m, 0\circ, +2.21 m, FG3'
+mrun(3).fnam='../swan_stationary/grids/CCBay_FG3.nc';
+mrun(3).pname = '2017_3p44m_0d_2p21_FG3'
+mrun(3).descrip = '2017-04-27 WHOI jetyak + 2017-04-28 SfM' 
+
 %% loop over all model results
 
 for i=1:length(mrun)
@@ -232,19 +233,20 @@ gng = gnang;          % do hide near groin data
 gn = gnan;
 
 
-%% plot
+%% calc maps statistics
 hstack = zeros(3,nrows,ncols);
 pstack = zeros(3,nrows,ncols);
 dstack = zeros(3,nrows,ncols);
 
 for i=1:nrun
-   hstack(i,:,:)=mrun(i).h;
+   hstack(i,:,:)=-mrun(i).h;
    pstack(i,:,:)=mrun(i).P;
    dstack(i,:,:)=mrun(i).diss;
 end
 hmin = min(hstack,[],1);
 hmax = max(hstack,[],1);
 hrange = squeeze( hmax-hmin );
+hdiff = diff(hstack,1,1);
 
 pmin = nanmin(pstack,[],1);
 pmax = nanmax(pstack,[],1);
@@ -256,7 +258,7 @@ dmin = nanmin(dstack,[],1);
 dmax = nanmax(dstack,[],1);
 dmean = squeeze(nanmean(dstack,1));
 drange = squeeze( dmax-dmin )./dmean;
-%% plot h grids
+%% map plots
 figure(1)
 subplot(2,2,1)
 pcolorjw(-mrun(1).h)
@@ -274,13 +276,60 @@ subplot(2,2,3)
 pcolorjw(-mrun(3).h)
 caxis([-8 8])
 colorbar
-title(strcat(mrun(2).descrip,' Bathymetry [m]'))
+title(strcat(mrun(3).descrip,' Bathymetry [m]'))
 
 subplot(2,2,4)
 pcolorjw(hrange)
 caxis([0,2])
 colorbar
 title(strcat('Range in Bathymetry [m]'))
+
+%% difference plots
+figure(10)
+subplot(311)
+pcolorjw(squeeze(hdiff(1,:,:)))
+caxis([-2 2])
+colorbar
+
+subplot(312)
+pcolorjw(squeeze(hdiff(2,:,:)))
+caxis([-2 2])
+colorbar
+
+subplot(313)
+pcolorjw(squeeze(hstack(3,:,:)-hstack(1,:,:)))
+caxis([-2 2])
+colorbar
+%%
+figure(11); clf
+subplot(211)
+h=pcolorjw(xg,yg,hrange)
+hold on
+shading flat
+set(h,'facealpha',.5)
+xlim([0,1400])
+ylim([50,500])
+caxis([0, 2])
+ylabel('Cross-shore distance [m]','fontsize',14)
+xlabel('Alongshore distance [m]','fontsize',14)
+%title('Topography/bathymetry [m NAVD88]','fontweight','normal','fontsize',14);
+h=colorbar('eastoutside')
+ylabel(h,'Range in bathymetry [m]','fontsize',12)
+%colormap(cmocean('topo'))
+%colormap(cmocean('-deep'))
+%colormap(cmocean('-tarn'))
+%colormap(cmocean('curl'))
+colormap(cmocean('balance'))
+
+% colormap('jet')
+almost_white = [.9,.9,.9];
+yellow = [.9, .9, 0]
+almost_black = [.1, .1, .4]
+[c,hndle] = contour(xgg,ygg,-mrun(1).h,[-8:2:6],'linecolor',almost_black,'linewidth',2);
+clabel(c,hndle,'fontsize',12,'color',almost_black)
+%h1=quiver(200,350,-100*sind(40),100*cosd(40),'color',almost_black,'linewidth',4);
+h1=plot_arrow(200,350,200-100*sind(40),350+100*cosd(40),'color','k','linewidth',3,'headwidth',.8);
+text(175,320,'North','fontsize',14,'color','k')
 
 %% plot P grids
 figure(2)
