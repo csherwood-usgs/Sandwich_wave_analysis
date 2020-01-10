@@ -69,7 +69,8 @@ fprintf(1,'Replaced %d points.\n',length(ireplace))
 % linear interpolation across groin by beachcam house
 mhwm(1005:1017) = linspace(126.5,127.3,13);
 imhwm = round(mhwm);
-%% find MHHW (1.43 m NAVD88) MHW (1.28 m NAVD88) and  MWL (0. m NAVD88) on each map
+%% find Dune toe (2.5 m), MHHW (1.43 m NAVD88) MHW (1.28 m NAVD88) and  MWL (0. m NAVD88) on each map
+dt = nan*ones(nx,nmap);
 mhhw = nan*ones(nx,nmap);
 mhw = nan*ones(nx,nmap);
 mwl = nan*ones(nx,nmap);

@@ -155,10 +155,17 @@ for i=1:length(mrun)
       Pdiss(ii) = mrun(i).P(idiss(ii),ii);
       dirdiss(ii) = wd(idiss(ii),ii);
    end
-   dalongb = cosd(-90-dirb+40);
-   dalongdiss = cosd(-90-dirdiss+40);
-   dacrossb = sind(-90-dirb+40);
-   dacrossdiss = sind(-90-dirdiss+40);
+%    dalongb = cosd(-90-dirb+40);
+%    dalongdiss = cosd(-90-dirdiss+40);
+%    dacrossb = sind(-90-dirb+40);
+%    dacrossdiss = sind(-90-dirdiss+40);
+   % Sine terms normalizes P for distance alongshore, second term determines
+   % alongshore or onshore component per Komar p. 390-391. First version
+   % submitted did not include first sine term.
+   dalongb = sind(-90-dirb+40).*cosd(-90-dirb+40);
+   dalongdiss = sind(-90-dirdiss+40).*cosd(-90-dirdiss+40);
+   dacrossb = sind(-90-dirb+40).*sind(-90-dirb+40);
+   dacrossdiss = sind(-90-dirdiss+40).*sind(-90-dirdiss+40);
    
    % Calculate runup
    % reverse shoal to get Ho (Nielsen, 2009, eq. 1.7.5)
