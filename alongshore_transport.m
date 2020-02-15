@@ -1,43 +1,44 @@
 % Breakpoint formula Ashton, Muarray, Arnoult (2001)
 clear
+echo off
 rhow = 1030.;
 g = 9.81;
-K = 6.4e4 % m^3/day
+K = 6.4e4; % m^3/day
 
 dx = 5;
 dy = 5;
 
-mrun(1).datt = '20170213_000000'
-mrun(1).wlev = 2.21
-mrun(1).rundir = '../swan_stationary/H2017_0d_2p21_stat/'
-mrun(1).rname = '2017 3p44m, 0\circ, +2.21 m, FG2'
+mrun(1).datt = '20170213_000000';
+mrun(1).wlev = 2.21;
+mrun(1).rundir = '../swan_stationary/H2017_0d_2p21_stat/';
+mrun(1).rname = '2017 3p44m, 0\circ, +2.21 m, FG2';
 mrun(1).fnam='../swan_stationary/grids/CCBay_FG2.nc';
-mrun(1).pname = '2017_3p44m_0d_2p21_FG2'
-mrun(1).descrip = '2013 USACE lidar + 2017-01-25 SfM' 
+mrun(1).pname = '2017_3p44m_0d_2p21_FG2';
+mrun(1).descrip = '2013 USACE lidar + 2017-01-25 SfM' ;
 
-mrun(2).datt = '20170213_000000'
-mrun(2).wlev = 2.21
-mrun(2).rundir = '../swan_stationary/H2017_0d_2p21_stat5/'
-mrun(2).rname = '2017 3p44m, 0\circ, +2.21 m, FG5'
+mrun(2).datt = '20170213_000000';
+mrun(2).wlev = 2.21;
+mrun(2).rundir = '../swan_stationary/H2017_0d_2p21_stat5/';
+mrun(2).rname = '2017 3p44m, 0\circ, +2.21 m, FG5';
 mrun(2).fnam='../swan_stationary/grids/CCBay_FG5.nc';
-mrun(2).pname = '2017_3p44m_0d_2p21_FG5'
-mrun(2).descrip = '2016-06-06 USGS jetyak + 2016-09-21 SfM' 
+mrun(2).pname = '2017_3p44m_0d_2p21_FG5';
+mrun(2).descrip = '2016-06-06 USGS jetyak + 2016-09-21 SfM'; 
 
-mrun(3).datt = '20170213_000000'
-mrun(3).wlev = 2.21
-mrun(3).rundir = '../swan_stationary/H2017_0d_2p21_stat3/'
-mrun(3).rname = '2017 3p44m, 0\circ, +2.21 m, FG3'
-mrun(3).fnam='../swan_stationary/grids/CCBay_FG3.nc';
-mrun(3).pname = '2017_3p44m_0d_2p21_FG3'
-mrun(3).descrip = '2017-04-27 WHOI jetyak + 2017-04-28 SfM' 
+mrun(3).datt = '20170213_000000';
+mrun(3).wlev = 2.21;
+mrun(3).rundir = '../swan_stationary/H2017_0d_2p21_stat3/';
+mrun(3).rname = '2017 3p44m, 0\circ, +2.21 m, FG3';
+mrun(3).fnam='../swan_stationary/grids/CCBay_FG3.nc';;
+mrun(3).pname = '2017_3p44m_0d_2p21_FG3';
+mrun(3).descrip = '2017-04-27 WHOI jetyak + 2017-04-28 SfM' ;
 
 %% loop over all model results
 
 for i=1:length(mrun)
    
-   rundir = mrun(i).rundir
-   datt = mrun(i).datt
-   fnam = mrun(i).fnam
+   rundir = mrun(i).rundir;
+   datt = mrun(i).datt;
+   fnam = mrun(i).fnam;
    % Read the grid
    h=ncread(fnam,'h')';
    ss = size(h); if(ss(1)~=126); h=h'; end
@@ -315,7 +316,7 @@ hold on
 shading flat
 set(h,'facealpha',.5)
 xlim([0,1400])
-ylim([50,500])
+ylim([90,500])
 caxis([0, 2])
 ylabel('Cross-shore distance [m]','fontsize',14)
 xlabel('Alongshore distance [m]','fontsize',14)
@@ -338,6 +339,26 @@ clabel(c,hndle,'fontsize',12,'color',almost_black)
 h1=plot_arrow(200,350,200-100*sind(40),350+100*cosd(40),'color','k','linewidth',3,'headwidth',.8);
 text(175,320,'North','fontsize',14,'color','k')
 
+subplot(223)
+pcolorjw(xg,yg,100*prange)
+hold on
+caxis([0 200])
+xlim([0,1400])
+ylim([90,500])
+h=colorbar;
+ylabel(h,'Range in Wave Power (%)','fontsize',12)
+ylabel('Cross-shore distance [m]','fontsize',14)
+xlabel('Alongshore distance [m]','fontsize',14)
+
+subplot(224)
+pcolorjw(xg,yg,100*drange)
+xlim([0,1400])
+ylim([90,500])
+caxis([0 200])
+h=colorbar;
+ylabel(h,'Range in Dissipation Rate (%)','fontsize',12)
+xlabel('Alongshore distance [m]','fontsize',14)
+% print('range_maps.png','-dpng','-r300')
 %% plot P grids
 figure(2)
 subplot(2,2,1)
@@ -399,7 +420,7 @@ Hb = 2.
 Qs = K*Hb.^(5/2)*sind(phib-theta).*cosd(phib-theta)
 
 plot(phib,Qs)
-%% alongshore components
+%% plot alongshore components
 figure(4); clf;
 subplot(513)
 hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
@@ -470,8 +491,8 @@ dPb_mean = dPb_sum ./nrun
 % plot(xg(1:end-1)+dx/2,smoothdata(dPb_mean,'movmean',13),'-','linewidth',2,'color',[.2 .2 .2]);
 % plot(xg(1:end-1)+dx/2,smoothdata(dPdiss_mean,'movmean',13),'-','linewidth',2,'color',[1 .2 .2]);
 
-plot(xg(1:end-1)+dx/2,smoothdata(-diff(Pb_mean),'movmean',5),'-','linewidth',2,'color',[.2 .2 .2]);
-plot(xg(1:end-1)+dx/2,smoothdata(-diff(Pdiss_mean),'movmean',5),'-','linewidth',2,'color',[1 .2 .2]);
+% plot(xg(1:end-1)+dx/2,smoothdata(-diff(Pb_mean),'movmean',5),'-','linewidth',2,'color',[.2 .2 .2]);
+% plot(xg(1:end-1)+dx/2,smoothdata(-diff(Pdiss_mean),'movmean',5),'-','linewidth',2,'color',[1 .2 .2]);
 
 ylim([-0.150 0.1501])
 xlim([0,1400])
@@ -510,4 +531,80 @@ posd = get(gca, 'Position');
 posd(4) = .13;
 posd(2) = 0.11;
 set(gca, 'Position', posd)
+print('alongshore_gradients.png','-dpng','-r300')
+%%
+%% plot hs and runup
 
+% first, load data from 10 Feb survey of dune toe
+plot_survey_data
+
+figure(15);clf
+ph = .41
+gap = (1-(2*ph))./4
+px = [2*gap, 3*gap+ph]
+
+ax1=subplot(211);
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hold on
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
+
+for i=1:nrun
+h2=plot(xg,smoothdata(mrun(i).hsdiss.*gnang,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]); hold on
+h1=plot(xg,smoothdata(mrun(i).hsb.*gnang,'movmean',3),'-','linewidth',2,'color',[.8 .2 .2]);
+end
+set(gca, 'fontsize', 12)
+ylabel('{\itH_s} [m]','fontsize',14)
+plot([430 555],[2.45 2.45],'-r','linewidth',6)
+plot([265 340],[2.45 2.45],'-k','linewidth',6,'color',[.6 .6 .6])
+text(.02,.95,'a','Fontsize',14,'Units','normalized')
+
+legend([h1,h2],'{\itH_s} at breakpoint','{\itH_s} at max. diss.','location','southwest')
+set(gca,'xticklabels',[])
+ylim([0 2.5])
+xlim([0,1400])
+grid on
+pos = get(gca, 'Position')
+pos(2)=px(2) 
+pos(4)=ph
+set(gca, 'Position', pos)
+
+ax1=subplot(212);
+hf=fill([65; 65; 125; 125],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hold on
+hf=fill([265; 265; 340; 340],[ylims'; flipud(ylims')],gray);
+set(hf,'edgecolor','none','facealpha',.6)
+hf=fill([430; 430; 555; 555],[ylims'; flipud(ylims')],pink);
+set(hf,'edgecolor','none','facealpha',.6)
+h5=plot(xg,1.43*ones(size(xg)),':k','linewidth',2); %MHHW
+h6=plot(xsurvey,medfilt(elev,5),'--k','linewidth',2,'color',[.3 .3 .3]);
+for i=1:nrun
+h2=plot(xg,smoothdata(mrun(i).R2b.*gnang,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]); hold on
+h1=plot(xg,smoothdata(mrun(i).R2b.*gnang+mrun(i).wlev,'movmean',3),'-','linewidth',2,'color',[.8 .2 .2]);
+end
+% % h6=plot(xxf,dtoey,'--k'); % from my attempts to find inflection point
+% h2=plot(xg,smoothdata(R2b,'movmean',3),'-','linewidth',2,'color',[.7 .7 .7]);
+% 
+% h1=plot(xg,smoothdata(R2b+wlev,'movmean',3),'-','linewidth',2,'color',[.8 .2 .2]);
+set(gca, 'fontsize', 12)
+ylabel('Runup {\itR}_2, Elevation [m]','fontsize',14)
+h3=plot([430 555],[5.9 5.9],'-r','linewidth',6)
+h4=plot([265 340],[5.9 5.9],'-k','linewidth',6,'color',[.6 .6 .6])
+%h6=plot([1070 1100],[2.7 2.7],'-r','linewidth',4,'color',[.4 .4 .4]);
+legend([h1,h2,h4,h3,h6,h5],'TWL = {\itR}_2 + tides + surge','Runup {\itR}_2','Geotubes','Max. Erosion','Dune Toe','MHHW','location','northeast');
+text(.02,.95,'b','Fontsize',14,'Units','normalized')
+
+% text( 245, 4.8,'geotubes','fontsize',12)
+ylim([0, 6])
+xlim([0,1400])
+xlabel('Alongshore distance [m]','fontsize',14)
+grid on
+pos = get(gca, 'Position')
+pos(2)=px(1) 
+pos(4)=ph
+set(gca, 'Position', pos)
+print('hs_runup_revised.png','-dpng','-r300')
